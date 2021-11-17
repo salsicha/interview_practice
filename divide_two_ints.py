@@ -12,7 +12,6 @@
 # within the 32-bit signed integer range: [−231, 231 − 1]. 
 # For this problem, assume that your function returns 231 − 1 when the division result overflows.
 
-
 # Input: dividend = 10, divisor = 3
 # Output: 3
 # Explanation: 10/3 = truncate(3.33333..) = 3.
@@ -33,5 +32,19 @@
 # -231 <= dividend, divisor <= 231 - 1
 # divisor != 0
 
+
+dividend = 10
+divisor = 3
+
+count = 0
+sum = 0
+
+while True:
+    if sum + divisor >= dividend:
+        print(count)
+        break
+
+    count += 1
+    sum += divisor
 
 
