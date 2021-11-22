@@ -93,10 +93,13 @@ def draw_path(pts, order):
 # Author: Alex Moran
 #############################
 
+# Standard example:
+# https://stackoverflow.com/questions/30552656/python-traveling-salesman-greedy-algorithm
+
 from scipy import stats
 
 # set up search grid
-grid_size = 15
+grid_size = 10
 x = pts[:, 0]
 y = pts[:, 1]
 bins = np.linspace(0, 1.0, num = grid_size)
@@ -130,11 +133,41 @@ for m, points_indices in enumerate(masks):
 	last_point_index = points_indices[-1]
 
 	# distance between random points in grid cell
-	indexed_points = np.concatenate((home[np.newaxis, :], indexed_points))
-	inter_dist = np.linalg.norm(indexed_points[:-1:] - indexed_points[1::], axis=1)
+
+	# Unsorted:
+	# indexed_points = np.concatenate((home[np.newaxis, :], indexed_points))
+	# inter_dist = np.linalg.norm(indexed_points[:-1:] - indexed_points[1::], axis=1)
+
+	# Sorted distance to origin:
+	# cell_sorted = np.argsort(home_dist[points_indices])
+	# points_sorted = indexed_points[cell_sorted]
+	# points_sorted = np.concatenate((home[np.newaxis, :], points_sorted))
+
+	# Sorted nearest neighbor:
+	from sklearn.neighbors import NearestNeighbors
+	idx_points = np.concatenate((home[np.newaxis, :], indexed_points))
+	nbrs = NearestNeighbors(n_neighbors=len(idx_points), algorithm='ball_tree').fit(idx_points)
+	distances, indices = nbrs.kneighbors(idx_points)
+	nn_order = [0]
+	while len(nn_order) < indices.shape[0]:
+		nns = indices[nn_order[-1]]
+		for nn_idx in nns:
+			if nn_idx not in nn_order:
+				nn_order.append(nn_idx)
+				break
+	nn_order.pop(0)
+	cell_sorted = np.array(nn_order) - 1
+	points_sorted = idx_points[cell_sorted]
+	points_sorted = np.concatenate((home[np.newaxis, :], points_sorted))
+
+	# distance between points
+	inter_dist = np.linalg.norm(points_sorted[:-1:] - points_sorted[1::], axis=1)
 
 	# pad with home index to return home after completing a grid
 	inter_dist = np.concatenate((inter_dist, np.array([home_dist[last_point_index]])))
+
+	# Sorted:
+	points_indices = points_indices[cell_sorted]
 	points_indices = np.concatenate((np.array([0]), points_indices))
 	points_indices = np.concatenate((points_indices, np.array([0])))
 
@@ -142,7 +175,6 @@ for m, points_indices in enumerate(masks):
 	for i in range(inter_dist.shape[0]):
 		idx = points_indices[i]
 		order.append(idx)
-
 		next_idx = points_indices[i + 1]
 
 		# check that we can reach the next point
