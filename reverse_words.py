@@ -44,5 +44,6 @@
 txt = " the sky is blue "
 output = []
 output = txt.split()
+# output = output[::-1]
 output.reverse()
 print(output)

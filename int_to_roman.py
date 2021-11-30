@@ -47,6 +47,7 @@ codes = {
     "M": 1000
 }
 code_list = ["I", "V" ,"X", "L", "C", "D", "M"]
+# code_list = code_list[::-1]
 code_list.reverse()
 
 num = 3

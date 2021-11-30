@@ -36,6 +36,7 @@ output = []
 for out in out_s:
     output.append(out)
 
+# output = output[::-1]
 output.reverse()
 
 print(output)
