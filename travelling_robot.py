@@ -3,16 +3,10 @@ from math import sqrt
 import matplotlib.pyplot as plt
 
 """
-## Planning: The Traveling Robot Problem
+## Traveling Robot Problem
 
 Visit a collection of points in the shortest path you can find. 
 The catch? You have to "go home to recharge" every so often. 
-
-We want fast approximations rather than a brute force perfect solution.
-Your solution will be judged on:
-* the length of path it produces
-* fast runtime
-* code quality and maintainability
 
 ### Details
 
@@ -20,7 +14,6 @@ Your solution will be judged on:
 * The recharge station is located at (.5, .5)
 * You cannot travel more than 3 units of distance before recharging
 * You must start and end at the recharge station
-* Skeleton code provided in Python. Python and C++ are acceptable
 """
 
 #############################
@@ -82,16 +75,6 @@ def draw_path(pts, order):
 	plt.plot(path[:,0], path[:,1])
 	plt.show()
 
-#############################
-# Your code goes here
-# Read the "pts" array
-# generate a valid order, starting and ending with 0, the recharging station
-#############################
-
-#############################
-# Start
-# Author: Alex Moran
-#############################
 
 # Standard example:
 # https://stackoverflow.com/questions/30552656/python-traveling-salesman-greedy-algorithm
@@ -186,10 +169,6 @@ for m, points_indices in enumerate(masks):
 		else:
 			# go to next point
 			odom_dist += inter_dist[i]
-
-#############################
-# End
-#############################
 
 
 check_order(pts, order)
