@@ -83,9 +83,7 @@ def lagest_labeled_cloud(in_cld, size, min_pts, index):
 
 
 def get_markers(timestamp, points):
-    """Write some ros markers
-       Help http://wiki.ros.org/rviz/DisplayTypes/Marker
-       Feel free to adapt to your needs"""
+    """Markers"""
     markers = []
     for pt in points:
         print(pt)
@@ -104,7 +102,7 @@ def get_markers(timestamp, points):
     return MarkerArray(markers=markers)
 
 
-class take_home:
+class ClusterFinder:
     def __init__(self):
         self.init_listener = True
 
@@ -184,7 +182,7 @@ class take_home:
 
 def main():
     rospy.init_node('take_home', anonymous=True)
-    take_home_test = take_home()
+    take_home_test = ClusterFinder()
     try:
         rospy.spin()
     except KeyboardInterrupt:
