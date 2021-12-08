@@ -24,6 +24,7 @@ def segment_cld(pc_masked, size):
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(pc_masked)
 
+    # RANSAC: Random sample consensus
     plane_model, inliers = pcd.segment_plane(distance_threshold=size, ransac_n=3, num_iterations=500)
     inlier_cld = pcd.select_by_index(inliers)
     outlier_cld = pcd.select_by_index(inliers, invert=True)
