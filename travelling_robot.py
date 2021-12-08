@@ -1,6 +1,7 @@
 import numpy as np
 from math import sqrt
 import matplotlib.pyplot as plt
+from scipy import stats
 
 """
 ## Traveling Robot Problem
@@ -78,8 +79,6 @@ def draw_path(pts, order):
 
 # Standard example:
 # https://stackoverflow.com/questions/30552656/python-traveling-salesman-greedy-algorithm
-
-from scipy import stats
 
 # set up search grid
 grid_size = 10
