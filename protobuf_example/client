@@ -1,0 +1,88 @@
+#!/usr/bin/python3
+
+import cv2
+import grpc
+import sys
+import numpy as np
+import argparse
+
+# Generated protobuf files are here
+sys.path.append('./proto/out')
+
+# Import protobuf classes
+import proto.out.image_pb2 as image_pb2
+import proto.out.image_pb2_grpc as image_pb2_grpc
+
+# Parse args
+parser = argparse.ArgumentParser()
+parser.add_argument("--port", type=str, help="specify port", default = "5005")
+parser.add_argument("--host", type=str, help="specify host", default = "127.0.0.1")
+parser.add_argument("--input", type=str, help="input file, example: ./input.png", required = True)
+parser.add_argument("--output", type=str, help="output file, example: ./output.png", required = True)
+parser.add_argument("--rotate", type=str, help="rotate image", default = "NONE")
+parser.add_argument("--mean", help="mean filter image", action='store_true')
+args = parser.parse_args()
+
+# Validate rotate arg
+rotation_codes = ["NONE", "NINETY_DEG", "ONE_EIGHTY_DEG", "TWO_SEVENTY_DEG"]
+if args.rotate not in rotation_codes:
+    print("Rotation arg not in enum")
+    exit()
+
+# Create gRPC channel
+channel = grpc.insecure_channel(f'{args.host}:{args.port}')
+
+# Create client
+stub = image_pb2_grpc.NLImageServiceStub(channel)
+
+# Read input file
+image = cv2.imread(args.input)
+
+# Check for color vs black & white
+if len(image.shape) == 3:
+    color = True
+elif len(image.shape) == 2:
+    color = False
+else:
+    print("Input image not correct shape")
+    exit()
+
+# Rotate image
+if rotation_codes.index(args.rotate) > 0:
+    # Create NLImage and rotate request objects
+    data = np.ndarray.tobytes(image)
+    height = image.shape[0]
+    width = image.shape[1]
+    nl_img = image_pb2.NLImage(color = color, data = data, width = width, height = height)
+    rot_req = image_pb2.NLImageRotateRequest(image = nl_img)
+
+    # Rotate code
+    rot_req.rotation = rotation_codes.index(args.rotate)
+
+    # Call rotate service
+    response = stub.RotateImage(rot_req)
+    restored = np.frombuffer(response.data, dtype=np.uint8)
+    if color:
+        image = restored.reshape(response.height, response.width, 3)
+    else:
+        image = restored.reshape(response.height, response.width)
+
+# Mean filter image
+if args.mean:
+    # Create NLImage message
+    data = np.ndarray.tobytes(image)
+    height = image.shape[0]
+    width = image.shape[1]
+    nl_img = image_pb2.NLImage(color = color, data = data, width = width, height = height)
+
+    # Call mean filter service
+    response = stub.MeanFilter(nl_img)
+    restored = np.frombuffer(response.data, dtype=np.uint8)
+    if color:
+        image = restored.reshape(response.height, response.width, 3)
+    else:
+        image = restored.reshape(response.height, response.width)
+
+# Save output image
+status = cv2.imwrite(args.output, image)
+print("Image save status: ", status)

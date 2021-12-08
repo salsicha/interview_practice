@@ -1,2 +1,5 @@
 .DS_Store
 one_layer_nn
+invertible_nn
+image_pb2.py
+image_pb2_grpc.py

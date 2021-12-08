@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python3 -m grpc_tools.protoc --proto_path=./proto/ ./proto/image.proto --python_out=./proto/out/ --grpc_python_out=./proto/out/

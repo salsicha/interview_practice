@@ -1,0 +1,111 @@
+#!/usr/bin/python3
+
+import cv2
+import numpy as np 
+import grpc
+from concurrent import futures
+import time
+import sys
+import argparse
+
+# Generated protobuf files are here
+sys.path.append('./proto/out')
+
+# Import protobuf classes
+import proto.out.image_pb2 as image_pb2
+import proto.out.image_pb2_grpc as image_pb2_grpc
+
+# Parse args
+parser = argparse.ArgumentParser()
+parser.add_argument("--port", type=str, help="specify port", default = "5005")
+parser.add_argument("--host", type=str, help="specify host", default = "127.0.0.1")
+args = parser.parse_args()
+
+# List of valid rotation options
+rotation_codes = [None, cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE]
+
+# Thread pool max workers
+max_wrkers = 1
+
+
+# Define .proto service
+class NLImageServiceServicer(image_pb2_grpc.NLImageServiceServicer):
+
+    def RestoreImage(self, req):
+        '''RestoreImage converts message bytes to numpy array'''
+
+        image_flat = np.frombuffer(req.data, dtype=np.uint8)
+        if req.color:
+            image = image_flat.reshape(req.height, req.width, 3)
+        else:
+            image = image_flat.reshape(req.height, req.width)
+        return image
+
+    def RotateImage(self, request, context):
+        '''Takes RotateImage request, returns NLImage'''
+
+        assert request.image.data
+
+        # Create NLImage response object
+        response = image_pb2.NLImage()
+        response.color = request.image.color
+        response.width = request.image.width
+        response.height = request.image.height
+
+        image = self.RestoreImage(request.image)
+
+        # Rotate image
+        if request.rotation:
+            r_code = rotation_codes[request.rotation]
+            image = cv2.rotate(src=image, rotateCode=r_code)
+
+            if request.rotation == 1 or request.rotation == 3:
+                response.height = request.image.width
+                response.width = request.image.height
+
+        data = np.ndarray.tobytes(image)
+        response.data = data
+
+        return response
+
+
+    def MeanFilter(self, request, context):
+        '''Takes MeanFilter request, returns NLImage'''
+        assert request.data
+
+        # Create NLImage response object
+        response = image_pb2.NLImage()
+        response.color = request.color
+        response.width = request.width
+        response.height = request.height
+
+        restored = self.RestoreImage(request).astype(np.float64)
+
+        image = cv2.blur(restored, (3, 3), borderType = cv2.BORDER_CONSTANT)
+
+        # Normalized Convolution
+        pad = np.ones(restored.shape, np.uint8) * 255
+        pad_blur = cv2.blur(pad, (3, 3), borderType = cv2.BORDER_CONSTANT)
+        image = image * 255 / pad_blur
+
+        data = np.ndarray.tobytes(image.astype(np.uint8))
+        response.data = data
+
+        return response
+
+
+# Create gRPC server and add to servicer
+server = grpc.server(futures.ThreadPoolExecutor(max_workers = max_wrkers))
+image_pb2_grpc.add_NLImageServiceServicer_to_server(NLImageServiceServicer(), server)
+
+# Start server
+print(f"Starting server, port {args.port}.")
+server.add_insecure_port(f'{args.host}:{args.port}')
+server.start()
+
+# Run loop
+try:
+    while True:
+        time.sleep(1)
+except KeyboardInterrupt:
+    server.stop(0)
