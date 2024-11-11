@@ -26,14 +26,52 @@ class Solution:
 
         self.board_arr = np.array(board).astype(int)
 
-        print("board arr: ", self.board_arr)
 
         # create list of candidates
         candidates = self.gen_candidates(self.indices, self.board_arr)
 
+
+
+        # TODO: just clean this up and exit properly
+
+        # TODO: also, use python sets below
+
+
+        while True:
+
+            b = True
+            for i, cand in enumerate(candidates):
+                if len(cand) == 1:
+                    b = False
+            if b:
+                break
+
+            removes = []
+            for i, cand in enumerate(candidates):
+                if len(cand) == 1:
+                    removes.append(i)
+                    inds = self.indices[i]
+                    self.board_arr[inds[0], inds[1]] = cand[0]
+
+            for index in sorted(removes, reverse=True):
+                del self.indices[index]
+
+            candidates = self.gen_candidates(self.indices, self.board_arr)
+
+
+
+
+
+        for i, cand in enumerate(candidates):
+            if len(cand) == 1:
+                print("i: ", i, " cand: ", cand, " ind: ", self.indices[i])
+
+
+
+
         permutations = itertools.product(*candidates)
 
-        print("perms: ", permutations)
+
 
         for p in permutations:
 
@@ -46,6 +84,13 @@ class Solution:
                     board[index[0]][index[1]] = val
 
                 print("board: ", board)
+
+                ba = np.array(board).astype(int)
+
+                verified = self.verify_board(ba, self.indices)
+
+                print("verified: ", verified)
+
 
                 return
 
@@ -131,7 +176,7 @@ class Solution:
             total = np.concatenate((row, col, corner))
 
 
-            # TOOD: Instead of total array use set
+            # TODO: Instead of total array use set
 
             # make list 1-9 (options)
             # turn into set
@@ -148,14 +193,13 @@ class Solution:
             for x in range(1, 10):
                 if x not in tot_list:
                     candidate_list.append(x)
-                # else:
-                #     print("fail")
+
+
+            if len(candidate_list) == 0:
+                print("cl empty: ", index)
+                return False
 
             candidates.append(candidate_list)
-
-            # if len(candidate_list) == 0:
-            #     return False
-
 
         return candidates
 

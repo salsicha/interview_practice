@@ -140,9 +140,9 @@ class Solution:
                 if x not in tot_list:
                     candidate_list.append(x)
 
-            # if len(candidate_list) == 0:
-            #     # print("zero")
-            #     return False
+            if len(candidate_list) == 0:
+                # print("zero")
+                return False
 
             # random.shuffle(candidate_list)
 
