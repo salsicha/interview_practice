@@ -31,15 +31,12 @@ class Solution:
         # create list of candidates
         candidates = self.gen_candidates(self.indices, self.board_arr)
 
-        permutations = itertools.product(*candidates)
-
-        print("perms: ", permutations)
-
-        for p in permutations:
-
-            result = self.solve(p)
+        pool = Pool(19)
+        for result in pool.imap(self.worker, itertools.product(*candidates)):
 
             if result:
+
+                print("Result: ", result)
 
                 for c, val in enumerate(result):
                     index = self.indices[c]
@@ -47,10 +44,15 @@ class Solution:
 
                 print("board: ", board)
 
+                pool.terminate()
+
+                pool.close()
+                pool.join()
+
                 return
 
 
-    def solve(self, combo):
+    def worker(self, combo):
 
         print("combo: ", combo)
 
@@ -130,17 +132,6 @@ class Solution:
 
             total = np.concatenate((row, col, corner))
 
-
-            # TOOD: Instead of total array use set
-
-            # make list 1-9 (options)
-            # turn into set
-            # turn total into a set
-            # set1.difference(set2)
-            # options.difference(total)
-            # if options empty, append [] to candidates, and continue
-
-
             tot_list = total.tolist()
 
             candidate_list = []
@@ -148,14 +139,14 @@ class Solution:
             for x in range(1, 10):
                 if x not in tot_list:
                     candidate_list.append(x)
-                # else:
-                #     print("fail")
-
-            candidates.append(candidate_list)
 
             # if len(candidate_list) == 0:
+            #     # print("zero")
             #     return False
 
+            # random.shuffle(candidate_list)
+
+            candidates.append(candidate_list)
 
         return candidates
 
