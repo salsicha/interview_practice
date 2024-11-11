@@ -11,6 +11,9 @@ import random
 
 
 class Solution:
+
+    # def check
+
     def solveSudoku(self, board):
         """
         Do not return anything, modify board in-place instead.
@@ -26,26 +29,10 @@ class Solution:
 
         self.board_arr = np.array(board).astype(int)
 
-
         # create list of candidates
         candidates = self.gen_candidates(self.indices, self.board_arr)
 
-
-
-        # TODO: just clean this up and exit properly
-
-        # TODO: also, use python sets below
-
-
-        while True:
-
-            b = True
-            for i, cand in enumerate(candidates):
-                if len(cand) == 1:
-                    b = False
-            if b:
-                break
-
+        while True:                        
             removes = []
             for i, cand in enumerate(candidates):
                 if len(cand) == 1:
@@ -53,25 +40,37 @@ class Solution:
                     inds = self.indices[i]
                     self.board_arr[inds[0], inds[1]] = cand[0]
 
+            if len(removes) == 0:
+                break
+
             for index in sorted(removes, reverse=True):
                 del self.indices[index]
 
             candidates = self.gen_candidates(self.indices, self.board_arr)
 
 
+        if len(candidates) == 0:
+            verified = True
 
+            for i in range(0, 9):
+                for j in range(0, 9):
 
+                    open_set = set([i for i in range(1, 10)])
 
-        for i, cand in enumerate(candidates):
-            if len(cand) == 1:
-                print("i: ", i, " cand: ", cand, " ind: ", self.indices[i])
+                    row, col, corner = self.get_arrs([i, j], self.board_arr)
 
+                    final_row = len(open_set - set(row))
+                    final_col = len(open_set - set(col))
+                    final_cor = len(open_set - set(corner))
 
+                    if final_row > 0 or final_col > 0 or final_cor > 0:
+                        verified = False
 
+            if verified:
+                print("verified: ", verified)
+                return
 
         permutations = itertools.product(*candidates)
-
-
 
         for p in permutations:
 
@@ -82,8 +81,6 @@ class Solution:
                 for c, val in enumerate(result):
                     index = self.indices[c]
                     board[index[0]][index[1]] = val
-
-                print("board: ", board)
 
                 ba = np.array(board).astype(int)
 
@@ -114,10 +111,6 @@ class Solution:
             candidates = self.gen_candidates(self.indices[p:], board_arr)
             if not candidates:
                 return False
-
-            # result = self.verify_board(board_arr, self.indices)
-            # if not result:
-            #     return False
 
         if result:
             return combo
@@ -173,33 +166,16 @@ class Solution:
 
             row, col, corner = self.get_arrs(index, board_arr)
 
-            total = np.concatenate((row, col, corner))
+            filled_set = set(row) | set(col) | set(corner)
 
+            initial_set = set([x for x in range(1, 10)])
 
-            # TODO: Instead of total array use set
+            final_set = initial_set - filled_set
 
-            # make list 1-9 (options)
-            # turn into set
-            # turn total into a set
-            # set1.difference(set2)
-            # options.difference(total)
-            # if options empty, append [] to candidates, and continue
-
-
-            tot_list = total.tolist()
-
-            candidate_list = []
-
-            for x in range(1, 10):
-                if x not in tot_list:
-                    candidate_list.append(x)
-
-
-            if len(candidate_list) == 0:
-                print("cl empty: ", index)
+            if len(final_set) == 0:
                 return False
 
-            candidates.append(candidate_list)
+            candidates.append(list(final_set))
 
         return candidates
 
